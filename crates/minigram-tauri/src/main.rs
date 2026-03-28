@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use minigram_client_core::{
-    connect, run_sync, AttachmentRecord, MessageRecord, SqliteStore, SyncStats,
+    connect, run_sync_db, AttachmentRecord, MessageRecord, SqliteStore, SyncStats,
 };
 use serde::{Deserialize, Serialize};
 use tauri::State;
@@ -147,11 +147,10 @@ async fn list_messages(
 
 #[tauri::command]
 async fn sync_messages(state: State<'_, AppState>) -> Result<SyncStats, String> {
-    let store = SqliteStore::open(&state.db_path).map_err(|e| e.to_string())?;
     let mut client = connect(&state.server_url)
         .await
         .map_err(|e| e.to_string())?;
-    run_sync(&store, &mut client, state.jwt_token.as_deref())
+    run_sync_db(&state.db_path, &mut client, state.jwt_token.as_deref())
         .await
         .map_err(|e| e.to_string())
 }

@@ -451,3 +451,61 @@ pub async fn run_sync(
         server_timestamp: pulled.server_timestamp,
     })
 }
+
+pub async fn run_sync_db(
+    path: impl AsRef<Path>,
+    client: &mut SyncServiceClient<Channel>,
+    jwt_token: Option<&str>,
+) -> anyhow::Result<SyncStats> {
+    let pending = {
+        let store = SqliteStore::open(path.as_ref())?;
+        store.pending_messages()?
+    };
+    let since_ts = {
+        let store = SqliteStore::open(path.as_ref())?;
+        store.last_sync_timestamp()?
+    };
+    let mut pushed = 0usize;
+
+    if !pending.is_empty() {
+        let ids: Vec<String> = pending.iter().map(|m| m.id.clone()).collect();
+        let push_batch: Vec<_> = pending.iter().map(record_to_proto).collect();
+        pushed = push_batch.len();
+
+        let mut request = Request::new(PushMessagesRequest {
+            messages: push_batch,
+        });
+        with_auth(&mut request, jwt_token)?;
+
+        let response = client.push_messages(request).await?.into_inner();
+
+        info!(
+            "uploaded {} messages (accepted={})",
+            pushed, response.accepted
+        );
+
+        let store = SqliteStore::open(path.as_ref())?;
+        store.clear_pending(&ids)?;
+    }
+
+    let mut request = Request::new(PullMessagesRequest {
+        since_timestamp: since_ts,
+    });
+    with_auth(&mut request, jwt_token)?;
+
+    let pulled = client.pull_messages(request).await?.into_inner();
+    let pulled_count = pulled.messages.len();
+    let server_timestamp = pulled.server_timestamp;
+
+    let store = SqliteStore::open(path.as_ref())?;
+    for msg in pulled.messages {
+        store.upsert_message(proto_to_record(msg))?;
+    }
+    store.set_last_sync_timestamp(server_timestamp)?;
+
+    Ok(SyncStats {
+        pushed,
+        pulled: pulled_count,
+        server_timestamp,
+    })
+}

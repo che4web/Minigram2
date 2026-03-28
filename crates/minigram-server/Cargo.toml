@@ -13,6 +13,7 @@ tracing-subscriber.workspace = true
 minigram-proto = { path = "../minigram-proto" }
 clap.workspace = true
 tokio-postgres.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 async-nats.workspace = true
 jsonwebtoken.workspace = true
