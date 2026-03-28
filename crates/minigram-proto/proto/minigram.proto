@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package minigram;
+
+service SyncService {
+  rpc PushMessages (PushMessagesRequest) returns (PushMessagesResponse);
+  rpc PullMessages (PullMessagesRequest) returns (PullMessagesResponse);
+}
+
+message Message {
+  string id = 1;
+  string chat_id = 2;
+  string author = 3;
+  string text = 4;
+  int64 created_at = 5;
+  int64 updated_at = 6;
+  bool deleted = 7;
+}
+
+message PushMessagesRequest {
+  repeated Message messages = 1;
+}
+
+message PushMessagesResponse {
+  uint32 accepted = 1;
+}
+
+message PullMessagesRequest {
+  int64 since_timestamp = 1;
+}
+
+message PullMessagesResponse {
+  repeated Message messages = 1;
+  int64 server_timestamp = 2;
+}
