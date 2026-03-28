@@ -11,8 +11,29 @@
 
 ## Запуск сервера
 
+Перед запуском сервера установите [Atlas CLI](https://atlasgo.io/getting-started), так как сервер применяет миграции PostgreSQL через `atlas migrate apply` при старте.
+
 ```bash
 cargo run -p minigram-server -- --listen 127.0.0.1:50051 --postgres-url postgres://postgres:postgres@127.0.0.1:5432/minigram --nats-url nats://127.0.0.1:4222 --nats-subject minigram.messages --jwt-secret minigram-dev-secret
+```
+
+Или через `.env` (файл читается сервером автоматически):
+
+```dotenv
+MINIGRAM_SERVER_LISTEN=127.0.0.1:50051
+MINIGRAM_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5432/minigram
+MINIGRAM_NATS_URL=nats://127.0.0.1:4222
+MINIGRAM_NATS_SUBJECT=minigram.messages
+MINIGRAM_JWT_SECRET=minigram-dev-secret
+```
+
+CLI-флаги имеют приоритет над значениями из `.env`.
+
+Для ручной работы со схемой можно использовать конфиг `crates/minigram-server/atlas.hcl`:
+
+```bash
+cd crates/minigram-server
+MINIGRAM_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5432/minigram atlas migrate apply --env local
 ```
 
 
