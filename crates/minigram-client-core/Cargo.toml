@@ -1,18 +1,15 @@
 [package]
-name = "minigram-server"
+name = "minigram-client-core"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
 chrono.workspace = true
+serde.workspace = true
 tokio.workspace = true
 tonic.workspace = true
+uuid.workspace = true
+rusqlite.workspace = true
 tracing.workspace = true
-tracing-subscriber.workspace = true
 minigram-proto = { path = "../minigram-proto" }
-clap.workspace = true
-tokio-postgres.workspace = true
-serde_json.workspace = true
-async-nats.workspace = true
-jsonwebtoken.workspace = true

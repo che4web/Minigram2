@@ -1,5 +1,11 @@
 [workspace]
-members = ["crates/minigram-proto", "crates/minigram-server", "crates/minigram-client"]
+members = [
+    "crates/minigram-proto",
+    "crates/minigram-server",
+    "crates/minigram-client-core",
+    "crates/minigram-client",
+    "crates/minigram-tauri",
+]
 resolver = "2"
 
 [workspace.package]
@@ -22,3 +28,4 @@ uuid = { version = "1", features = ["v4", "serde"] }
 rusqlite = { version = "0.32", features = ["bundled"] }
 tokio-postgres = "0.7"
 async-nats = "0.38"
+jsonwebtoken = "10"

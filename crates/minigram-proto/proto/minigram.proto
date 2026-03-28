@@ -7,6 +7,14 @@ service SyncService {
   rpc PullMessages (PullMessagesRequest) returns (PullMessagesResponse);
 }
 
+message Attachment {
+  string id = 1;
+  string kind = 2;
+  string file_name = 3;
+  string mime_type = 4;
+  bytes data = 5;
+}
+
 message Message {
   string id = 1;
   string chat_id = 2;
@@ -15,6 +23,7 @@ message Message {
   int64 created_at = 5;
   int64 updated_at = 6;
   bool deleted = 7;
+  repeated Attachment attachments = 8;
 }
 
 message PushMessagesRequest {
