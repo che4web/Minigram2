@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "identifier": "com.minigram.app",
   "build": {
-    "beforeDevCommand": "cd ../minigram-web && npm run dev",
-    "beforeBuildCommand": "cd ../minigram-web && npm run build",
+    "beforeDevCommand": "cd minigram-web && npm run dev",
+    "beforeBuildCommand": "cd minigram-web && npm run build",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../minigram-web/dist"
   },

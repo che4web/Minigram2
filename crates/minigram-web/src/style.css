@@ -53,6 +53,42 @@ body {
   border-top: 1px solid #243242;
 }
 
+.token-panel {
+  padding: 12px;
+  border-bottom: 1px solid #263341;
+  display: grid;
+  gap: 8px;
+  background: #141f29;
+}
+
+.token-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.token-input {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  border: 1px solid #304154;
+  background: var(--panel-soft);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.token-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
 .search,
 .input,
 .button {
@@ -267,4 +303,14 @@ body {
 
 .attachment-file:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    max-height: 50vh;
+  }
 }

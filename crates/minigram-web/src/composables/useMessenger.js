@@ -11,6 +11,9 @@ const queuedAttachments = ref([])
 const status = ref({ pending_uploads: 0, last_sync_timestamp: 0 })
 const loading = ref(false)
 const error = ref('')
+const jwtToken = ref('')
+
+const JWT_STORAGE_KEY = 'minigram.jwt_token'
 
 const filteredChats = computed(() => {
   const query = filter.value.trim().toLowerCase()
@@ -159,6 +162,42 @@ const clearError = () => {
   error.value = ''
 }
 
+const setJwtToken = async (value, { persist = true } = {}) => {
+  const normalized = String(value ?? '').trim()
+
+  try {
+    await invokeTauri('set_jwt_token', {
+      token: normalized || null,
+    })
+
+    jwtToken.value = normalized
+    if (persist && typeof window !== 'undefined' && window.localStorage) {
+      if (normalized) {
+        window.localStorage.setItem(JWT_STORAGE_KEY, normalized)
+      } else {
+        window.localStorage.removeItem(JWT_STORAGE_KEY)
+      }
+    }
+  } catch (e) {
+    error.value = String(e)
+    throw e
+  }
+}
+
+const initJwtToken = async () => {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return
+  }
+
+  const stored = window.localStorage.getItem(JWT_STORAGE_KEY) ?? ''
+  if (!stored.trim()) {
+    jwtToken.value = ''
+    return
+  }
+
+  await setJwtToken(stored, { persist: false })
+}
+
 export const useMessenger = () => ({
   chats,
   selectedChat,
@@ -170,6 +209,7 @@ export const useMessenger = () => ({
   status,
   loading,
   error,
+  jwtToken,
   filteredChats,
   selectedMeta,
   loadChats,
@@ -181,4 +221,6 @@ export const useMessenger = () => ({
   syncMessages,
   createOrSelectChat,
   clearError,
+  setJwtToken,
+  initJwtToken,
 })

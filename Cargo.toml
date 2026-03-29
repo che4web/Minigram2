@@ -28,4 +28,4 @@ uuid = { version = "1", features = ["v4", "serde"] }
 rusqlite = { version = "0.32", features = ["bundled"] }
 tokio-postgres = "0.7"
 async-nats = "0.38"
-jsonwebtoken = "10"
+jsonwebtoken = { version = "10", features = ["rust_crypto"] }

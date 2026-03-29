@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { formatTimestamp } from '../composables/useMinigramApi'
 import { useMessenger } from '../composables/useMessenger'
@@ -7,7 +7,22 @@ import { useMessenger } from '../composables/useMessenger'
 const route = useRoute()
 const router = useRouter()
 
-const { filteredChats, filter, status, loading, syncMessages, createOrSelectChat } = useMessenger()
+const {
+  filteredChats,
+  filter,
+  status,
+  loading,
+  syncMessages,
+  createOrSelectChat,
+  jwtToken,
+  setJwtToken,
+} = useMessenger()
+
+const jwtDraft = ref(jwtToken.value)
+
+watch(jwtToken, (value) => {
+  jwtDraft.value = value
+})
 
 const activeChatId = computed(() => route.params.chatId ?? null)
 
@@ -20,6 +35,15 @@ const openPrompt = async () => {
   if (chatId) {
     await router.push({ name: 'chat', params: { chatId } })
   }
+}
+
+const saveJwtToken = async () => {
+  await setJwtToken(jwtDraft.value)
+}
+
+const clearJwtToken = async () => {
+  jwtDraft.value = ''
+  await setJwtToken('')
 }
 </script>
 
@@ -34,6 +58,24 @@ const openPrompt = async () => {
 
     <div class="actions actions-single">
       <button class="button primary" @click="openPrompt">Новый / открыть чат</button>
+    </div>
+
+    <div class="token-panel">
+      <label class="token-label" for="jwt-token">JWT token</label>
+      <textarea
+        id="jwt-token"
+        v-model="jwtDraft"
+        class="token-input"
+        placeholder="Bearer token for sync"
+        rows="4"
+        spellcheck="false"
+      />
+      <div class="token-actions">
+        <button class="button" :disabled="loading" @click="saveJwtToken">Сохранить</button>
+        <button class="button ghost" :disabled="loading || !jwtDraft" @click="clearJwtToken">
+          Очистить
+        </button>
+      </div>
     </div>
 
     <div class="chat-list">

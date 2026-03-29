@@ -1,5 +1,7 @@
 use std::collections::HashMap;
+use std::fs;
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 use minigram_client_core::{
     connect, run_sync_db, AttachmentRecord, MessageRecord, SqliteStore, SyncStats,
@@ -8,11 +10,10 @@ use serde::{Deserialize, Serialize};
 use tauri::State;
 use uuid::Uuid;
 
-#[derive(Clone)]
 struct AppState {
     server_url: String,
     db_path: PathBuf,
-    jwt_token: Option<String>,
+    jwt_token: Mutex<Option<String>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -150,12 +151,61 @@ async fn sync_messages(state: State<'_, AppState>) -> Result<SyncStats, String> 
     let mut client = connect(&state.server_url)
         .await
         .map_err(|e| e.to_string())?;
-    run_sync_db(&state.db_path, &mut client, state.jwt_token.as_deref())
+    let jwt_token = state
+        .jwt_token
+        .lock()
+        .map_err(|e| e.to_string())?
+        .clone();
+
+    run_sync_db(&state.db_path, &mut client, jwt_token.as_deref())
         .await
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn set_jwt_token(state: State<'_, AppState>, token: Option<String>) -> Result<(), String> {
+    let normalized = token.and_then(|value| {
+        let trimmed = value.trim().to_owned();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed)
+        }
+    });
+
+    let mut jwt_token = state.jwt_token.lock().map_err(|e| e.to_string())?;
+    *jwt_token = normalized;
+    Ok(())
+}
+
+fn default_db_path() -> PathBuf {
+    if let Ok(path) = std::env::var("MINIGRAM_DB_PATH") {
+        return PathBuf::from(path);
+    }
+
+    if let Ok(data_dir) = std::env::var("XDG_DATA_HOME") {
+        return PathBuf::from(data_dir)
+            .join("minigram")
+            .join("minigram_tauri.db");
+    }
+
+    if let Ok(home_dir) = std::env::var("HOME") {
+        return PathBuf::from(home_dir)
+            .join(".local")
+            .join("share")
+            .join("minigram")
+            .join("minigram_tauri.db");
+    }
+
+    std::env::temp_dir().join("minigram_tauri.db")
+}
+
 fn main() {
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+
     tracing_subscriber::fmt()
         .with_env_filter("info")
         .with_target(false)
@@ -163,22 +213,24 @@ fn main() {
 
     let server_url = std::env::var("MINIGRAM_SERVER_URL")
         .unwrap_or_else(|_| "http://127.0.0.1:50051".to_string());
-    let db_path = std::env::var("MINIGRAM_DB_PATH")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| PathBuf::from("minigram_tauri.db"));
+    let db_path = default_db_path();
+    if let Some(parent) = db_path.parent() {
+        fs::create_dir_all(parent).expect("failed to create application data directory");
+    }
     let jwt_token = std::env::var("MINIGRAM_JWT_TOKEN").ok();
 
     tauri::Builder::default()
         .manage(AppState {
             server_url,
             db_path,
-            jwt_token,
+            jwt_token: Mutex::new(jwt_token),
         })
         .invoke_handler(tauri::generate_handler![
             send_message,
             list_chats,
             list_messages,
-            sync_messages
+            sync_messages,
+            set_jwt_token
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
