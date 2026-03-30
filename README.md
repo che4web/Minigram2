@@ -8,6 +8,8 @@
 - `crates/minigram-tauri` — Tauri backend.
 - `crates/minigram-web` — Vue 3 (Composition API) + Vite frontend для Tauri.
 - `crates/minigram-proto` — protobuf/gRPC контракт для обмена данными.
+- `crates/minigram-mobile-ffi` — JNI-обёртка (Rust `cdylib`) для Android, переиспользует `minigram-client-core`.
+- `crates/minigram-android` — Android-клиент на Jetpack Compose, вызывает sync через Rust/JNI.
 
 ## Запуск сервера
 
@@ -35,6 +37,22 @@ CLI-флаги имеют приоритет над значениями из `.
 cd crates/minigram-server
 MINIGRAM_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5432/minigram atlas migrate apply --env local
 ```
+
+
+## Android клиент (Jetpack Compose + Rust)
+
+Android-клиент находится в `crates/minigram-android`, а общий слой для вызова Rust из Kotlin — в `crates/minigram-mobile-ffi`.
+
+Ключевая идея: логика синхронизации не дублируется в Kotlin, а используется напрямую из `minigram-client-core` через JNI-функцию `syncOnce`.
+
+Быстрый старт:
+
+```bash
+cargo install cargo-ndk
+cargo ndk -t arm64-v8a -o crates/minigram-android/app/src/main/jniLibs build -p minigram-mobile-ffi --release
+```
+
+Дальше открыть `crates/minigram-android` в Android Studio и запустить приложение.
 
 
 ## JWT авторизация
