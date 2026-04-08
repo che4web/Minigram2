@@ -4,9 +4,10 @@ import SidebarChats from './components/SidebarChats.vue'
 import ErrorToast from './components/ErrorToast.vue'
 import { useMessenger } from './composables/useMessenger'
 
-const { initJwtToken, loadChats } = useMessenger()
+const { initJwtToken, initChatCatalog, loadChats } = useMessenger()
 
 onMounted(async () => {
+  initChatCatalog()
   await initJwtToken()
   await loadChats({ selectFirst: false })
 })
