@@ -6,6 +6,7 @@ members = [
     "crates/minigram-client",
     "crates/minigram-tauri",
     "crates/minigram-mobile-ffi",
+    "crates/minigram-web-dioxus",
 ]
 resolver = "2"
 
