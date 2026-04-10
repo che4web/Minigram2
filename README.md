@@ -7,6 +7,7 @@
 - `crates/minigram-client` — CLI клиент на базе `minigram-client-core`.
 - `crates/minigram-tauri` — Tauri backend.
 - `crates/minigram-web` — Vue 3 (Composition API) + Vite frontend для Tauri.
+- `crates/minigram-web-dioxus` — альтернативный web-клиент на Dioxus (Rust/WASM), использует те же Tauri-команды через `window.__TAURI__.core.invoke`.
 - `crates/minigram-proto` — protobuf/gRPC контракт для обмена данными.
 - `crates/minigram-mobile-ffi` — JNI-обёртка (Rust `cdylib`) для Android, переиспользует `minigram-client-core`.
 - `crates/minigram-android` — Android-клиент на Jetpack Compose, вызывает sync через Rust/JNI.
@@ -38,6 +39,21 @@ cd crates/minigram-server
 MINIGRAM_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5432/minigram atlas migrate apply --env local
 ```
 
+
+
+## Dioxus web-клиент
+
+Альтернативный web UI для Tauri backend находится в `crates/minigram-web-dioxus`.
+
+Быстрый старт (нужен [Dioxus CLI](https://dioxuslabs.com/learn/0.5/getting_started/)): 
+
+```bash
+cargo install dioxus-cli
+cd crates/minigram-web-dioxus
+dx serve
+```
+
+> Клиент запускается в браузере и ожидает доступный Tauri runtime (`window.__TAURI__`). Для локального UI-preview без Tauri будет показана ошибка вызова API.
 
 ## Android клиент (Jetpack Compose + Rust)
 
